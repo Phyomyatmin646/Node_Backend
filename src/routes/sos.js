@@ -2,7 +2,6 @@ const express = require("express");
 const router = express.Router();
 const SosAlert = require("../models/SosAlert");
 
-// create SOS
 router.post("/", async (req, res) => {
   try {
     const { resident_id, room_id, message } = req.body;
@@ -15,7 +14,6 @@ router.post("/", async (req, res) => {
 
     const io = req.app.get("io");
 
-    // 🔥 broadcast to all security/admin
     io.emit("sos_alert", sos);
 
     res.json({ message: "SOS triggered", sos });

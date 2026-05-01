@@ -2,7 +2,6 @@ const express = require("express");
 const router = express.Router();
 const Announcement = require("../models/Announcement");
 
-// create announcement
 router.post("/", async (req, res) => {
   try {
     const { user_id, title, message, type } = req.body;
@@ -16,7 +15,6 @@ router.post("/", async (req, res) => {
 
     const io = req.app.get("io");
 
-    // 🔥 broadcast to ALL users
     io.emit("announcement", announcement);
 
     res.json({ message: "Announcement created", announcement });

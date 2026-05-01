@@ -2,7 +2,7 @@ const express = require("express");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const User = require("../models/User");
-const sendSMS = require("../utils/sendSMS");
+const sendEmail = require("../utils/sendEmail"); // နာမည်ကို sendEmail လို့ ပြောင်းပေးထားပါတယ်
 
 const router = express.Router();
 
@@ -47,18 +47,17 @@ router.post("/signup", async (req, res) => {
 });
 
 // ================= LOGIN STEP 1 =================
-const sendSMS = require("../utils/sendSMS");
-
-// ================= LOGIN STEP 1 =================
 router.post("/login/step1", async (req, res) => {
   try {
-    const { phone, password } = req.body;
+    const { email, password } = req.body; // Email ကို အသုံးပြုပါမယ်
 
-    if (!password) {
-      return res.status(400).json({ message: "Password is required" });
+    if (!password || !email) {
+      return res
+        .status(400)
+        .json({ message: "Email and password are required" });
     }
 
-    const user = await User.findOne({ phone });
+    const user = await User.findOne({ email });
     if (!user) {
       return res.status(401).json({ message: "User not found" });
     }
@@ -73,33 +72,32 @@ router.post("/login/step1", async (req, res) => {
     user.otpExpires = Date.now() + 5 * 60 * 1000;
     await user.save();
 
-    const message = `Your Smart City OTP code is ${otp}. Valid for 5 minutes.`;
-
     try {
-      await sendSMS(phone, message);
-      console.log(`OTP sent to ${phone}`);
+      // 📧 Email ပို့ဆောင်ခြင်း
+      await sendEmail(email, otp);
+      console.log(`✅ OTP sent to ${email}`);
 
       res.status(200).json({
-        message: "OTP sent to your registered phone number",
+        message: "OTP sent to your registered email",
       });
-    } catch (smsErr) {
-      console.error(`Failed to send OTP to ${phone}:`, smsErr);
+    } catch (mailErr) {
+      console.error(`Failed to send OTP to ${email}:`, mailErr);
       res
         .status(500)
-        .json({ message: "Failed to send SMS. Please try again later." });
+        .json({ message: "Failed to send Email OTP. Please try again." });
     }
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// ================= LOGIN STEP 2 (With Refresh Token) =================
+// ================= LOGIN STEP 2 =================
 router.post("/login/step2", async (req, res) => {
   try {
-    const { phone, otp } = req.body;
+    const { email, otp } = req.body;
 
     const user = await User.findOne({
-      phone,
+      email,
       otp,
       otpExpires: { $gt: Date.now() },
     });
@@ -111,7 +109,6 @@ router.post("/login/step2", async (req, res) => {
     const { accessToken, refreshToken } = generateTokens(user);
 
     user.refreshToken = refreshToken;
-
     user.otp = undefined;
     user.otpExpires = undefined;
 
@@ -131,7 +128,64 @@ router.post("/login/step2", async (req, res) => {
   }
 });
 
-// ================= REFRESH TOKEN ROUTE =================
+// ================= FORGOT PASSWORD STEP 1 =================
+router.post("/forgot-password/step1", async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    user.otp = otp;
+    user.otpExpires = Date.now() + 5 * 60 * 1000;
+    await user.save();
+
+    try {
+      await sendEmail(email, otp);
+      console.log(`🔐 Forgot OTP sent to ${email}: ${otp}`);
+      res.status(200).json({ message: "OTP sent to your email" });
+    } catch (mailErr) {
+      res
+        .status(500)
+        .json({ message: "Failed to send email. Please try again." });
+    }
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ================= FORGOT PASSWORD STEP 2 =================
+router.post("/forgot-password/step2", async (req, res) => {
+  try {
+    const { email, otp, newPassword } = req.body;
+
+    const user = await User.findOne({
+      email,
+      otp,
+      otpExpires: { $gt: Date.now() },
+    });
+
+    if (!user) {
+      return res.status(400).json({ message: "Invalid or expired OTP" });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    user.password = hashedPassword;
+    user.otp = undefined;
+    user.otpExpires = undefined;
+
+    await user.save();
+
+    res.status(200).json({ message: "Password updated successfully" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ================= REFRESH TOKEN & LOGOUT =================
 router.post("/refresh-token", async (req, res) => {
   try {
     const { refreshToken } = req.body;
@@ -153,7 +207,6 @@ router.post("/refresh-token", async (req, res) => {
         process.env.JWT_SECRET,
         { expiresIn: "15m" },
       );
-
       res.json({ accessToken });
     });
   } catch (err) {
@@ -161,11 +214,10 @@ router.post("/refresh-token", async (req, res) => {
   }
 });
 
-// ================= LOGOUT (Clear Refresh Token) =================
 router.post("/logout", async (req, res) => {
   try {
-    const { phone } = req.body;
-    await User.findOneAndUpdate({ phone }, { refreshToken: undefined });
+    const { email } = req.body;
+    await User.findOneAndUpdate({ email }, { refreshToken: undefined });
     res.status(200).json({ message: "Logged out successfully" });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -173,65 +225,3 @@ router.post("/logout", async (req, res) => {
 });
 
 module.exports = router;
-
-// ================= FORGOT PASSWORD STEP 1 =================
-router.post("/forgot-password/step1", async (req, res) => {
-  try {
-    const { phone } = req.body;
-
-    const user = await User.findOne({ phone });
-
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-
-    user.otp = otp;
-    user.otpExpires = Date.now() + 5 * 60 * 1000;
-
-    await user.save();
-
-    const message = `Your Smart City Password Reset OTP is ${otp}. Valid for 5 minutes.`;
-
-    try {
-      await sendSMS(phone, message);
-      console.log(`🔐 Forgot OTP sent to ${phone}: ${otp}`);
-      res.status(200).json({ message: "OTP sent to your phone" });
-    } catch (smsErr) {
-      res
-        .status(500)
-        .json({ message: "Failed to send SMS. Please try again." });
-    }
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-router.post("/forgot-password/step2", async (req, res) => {
-  try {
-    const { phone, otp, newPassword } = req.body;
-
-    const user = await User.findOne({
-      phone,
-      otp,
-      otpExpires: { $gt: Date.now() },
-    });
-
-    if (!user) {
-      return res.status(400).json({ message: "Invalid or expired OTP" });
-    }
-
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
-
-    user.password = hashedPassword;
-    user.otp = undefined;
-    user.otpExpires = undefined;
-
-    await user.save();
-
-    res.status(200).json({ message: "Password updated successfully" });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
