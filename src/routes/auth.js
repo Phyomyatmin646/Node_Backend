@@ -2,7 +2,7 @@ const express = require("express");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const User = require("../models/User");
-const sendEmail = require("../utils/sendEmail"); // နာမည်ကို sendEmail လို့ ပြောင်းပေးထားပါတယ်
+const sendEmail = require("../utils/sendEmail");
 
 const router = express.Router();
 
@@ -49,7 +49,7 @@ router.post("/signup", async (req, res) => {
 // ================= LOGIN STEP 1 =================
 router.post("/login/step1", async (req, res) => {
   try {
-    const { email, password } = req.body; // Email ကို အသုံးပြုပါမယ်
+    const { email, password } = req.body;
 
     if (!password || !email) {
       return res
