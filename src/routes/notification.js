@@ -1,24 +1,28 @@
 const express = require("express");
 const router = express.Router();
-
 const Notification = require("../models/Notification");
-const protect = require("../middleware/authMiddleware");
 
-router.get("/", protect, async (req, res) => {
+router.post("/send", async (req, res) => {
   try {
-    const notifications = await Notification.find({ user: req.user.id });
-    res.json(notifications);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
+    const { user_id, title, message, type } = req.body;
 
-router.put("/:id/read", protect, async (req, res) => {
-  try {
-    const noti = await Notification.findById(req.params.id);
-    noti.isRead = true;
-    await noti.save();
-    res.json({ message: "Marked as read" });
+    const noti = await Notification.create({
+      user_id,
+      title,
+      message,
+      type,
+    });
+
+    const io = req.app.get("io");
+    const users = req.app.get("onlineUsers");
+
+    const socketId = users[user_id];
+
+    if (socketId) {
+      io.to(socketId).emit("notification", noti);
+    }
+
+    res.json({ message: "Notification sent", noti });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

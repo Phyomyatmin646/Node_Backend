@@ -36,6 +36,11 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/sos", sosRoutes);
 app.use("/api/parking", parkingRoutes);
+app.use("/api/announcements", require("./routes/announcement"));
+app.use("/api/reports", require("./routes/report"));
+app.use("/api/helpers", require("./routes/helperRequest"));
+app.use("/api/visitors", require("./routes/visitor"));
+app.use("/api/bills", require("./routes/serviceBill"));
 
 // ================= TEST =================
 app.get("/", (req, res) => {
@@ -49,7 +54,7 @@ const io = new Server(server, {
   cors: { origin: "*" },
 });
 
-// 🔥 store users
+// store users
 const onlineUsers = {};
 
 io.on("connection", (socket) => {
