@@ -2,9 +2,14 @@ const express = require("express");
 const router = express.Router();
 const ResParking = require("../models/ResParking");
 
+// OPTIONAL manual API
 router.put("/:id", async (req, res) => {
   try {
     const { status } = req.body;
+
+    if (!status) {
+      return res.status(400).json({ error: "status required" });
+    }
 
     const parking = await ResParking.findByIdAndUpdate(
       req.params.id,
@@ -12,11 +17,15 @@ router.put("/:id", async (req, res) => {
       { new: true },
     );
 
-    const io = req.app.get("io");
+    if (!parking) {
+      return res.status(404).json({ error: "Not found" });
+    }
 
-    io.emit("parking_update", parking);
-
-    res.json({ message: "Parking updated", parking });
+    res.json({
+      success: true,
+      message: "Updated (MQTT handles realtime)",
+      data: parking,
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
