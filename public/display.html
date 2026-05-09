@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visitor Reception Display</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Jost:wght@200;300;400;500&display=swap"
+        rel="stylesheet">
+
+
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+    <style>
+        :root {
+            --ink: #1a1a2e;
+            --paper: #f5f0e8;
+            --gold: #b8860b;
+            --gold-lt: #d4a843;
+            --cream: #faf7f2;
+            --muted: #8a8070;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: var(--ink);
+            font-family: 'Jost', sans-serif;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+
+        #idle-screen {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: var(--ink);
+            transition: opacity 0.6s ease;
+        }
+
+        .idle-ring {
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            border: 1px solid rgba(184, 134, 11, 0.25);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            margin-bottom: 48px;
+            animation: ringPulse 3s ease-in-out infinite;
+        }
+
+        .idle-ring::before {
+            content: '';
+            position: absolute;
+            inset: 12px;
+            border-radius: 50%;
+            border: 1px solid rgba(184, 134, 11, 0.15);
+        }
+
+        .idle-ring::after {
+            content: '';
+            position: absolute;
+            inset: -20px;
+            border-radius: 50%;
+            border: 1px solid rgba(184, 134, 11, 0.08);
+        }
+
+        @keyframes ringPulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+
+            50% {
+                transform: scale(1.04);
+                opacity: 0.7;
+            }
+        }
+
+        .scan-icon {
+            width: 72px;
+            height: 72px;
+            stroke: var(--gold);
+            fill: none;
+            stroke-width: 1;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+
+        .beam {
+            position: absolute;
+            left: 20px;
+            right: 20px;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--gold-lt), transparent);
+            top: 20px;
+            border-radius: 2px;
+            animation: beam 2.5s ease-in-out infinite;
+        }
+
+        @keyframes beam {
+            0% {
+                top: 20px;
+                opacity: 0;
+            }
+
+            10% {
+                opacity: 1;
+            }
+
+            90% {
+                opacity: 1;
+            }
+
+            100% {
+                top: calc(100% - 20px);
+                opacity: 0;
+            }
+        }
+
+        .idle-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-weight: 300;
+            font-size: 2.8rem;
+            color: var(--paper);
+            letter-spacing: 0.08em;
+            text-align: center;
+            margin-bottom: 12px;
+        }
+
+        .idle-sub {
+            font-size: 0.85rem;
+            font-weight: 200;
+            letter-spacing: 0.22em;
+            text-transform: uppercase;
+            color: var(--muted);
+            text-align: center;
+            margin-bottom: 48px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--gold);
+            display: inline-block;
+            margin-right: 8px;
+            animation: blink 1.4s ease-in-out infinite;
+        }
+
+        @keyframes blink {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.2;
+            }
+        }
+
+        .status-text {
+            font-size: 0.75rem;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--muted);
+        }
+
+
+        #qr-screen {
+            position: absolute;
+            inset: 0;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: var(--cream);
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        #qr-screen.visible {
+            display: flex;
+            opacity: 1;
+        }
+
+        .qr-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .qr-eyebrow {
+            font-size: 0.72rem;
+            font-weight: 400;
+            letter-spacing: 0.28em;
+            text-transform: uppercase;
+            color: var(--gold);
+            margin-bottom: 12px;
+        }
+
+        .qr-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 3.2rem;
+            font-weight: 300;
+            color: var(--ink);
+            line-height: 1.1;
+            margin-bottom: 10px;
+        }
+
+        .qr-title em {
+            font-style: italic;
+            color: var(--gold);
+        }
+
+        .qr-desc {
+            font-size: 0.88rem;
+            font-weight: 300;
+            letter-spacing: 0.05em;
+            color: var(--muted);
+        }
+
+
+        .qr-card {
+            background: #fff;
+            border: 1px solid rgba(184, 134, 11, 0.2);
+            border-radius: 20px;
+            padding: 32px;
+            box-shadow:
+                0 2px 8px rgba(26, 26, 46, 0.06),
+                0 20px 60px rgba(26, 26, 46, 0.12);
+            margin-bottom: 36px;
+            position: relative;
+            animation: cardIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes cardIn {
+            from {
+                transform: scale(0.85);
+                opacity: 0;
+            }
+
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+
+        .qr-card::before,
+        .qr-card::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border-color: var(--gold-lt);
+            border-style: solid;
+        }
+
+        .qr-card::before {
+            top: 12px;
+            left: 12px;
+            border-width: 2px 0 0 2px;
+            border-radius: 4px 0 0 0;
+        }
+
+        .qr-card::after {
+            bottom: 12px;
+            right: 12px;
+            border-width: 0 2px 2px 0;
+            border-radius: 0 0 4px 0;
+        }
+
+        #qr-canvas {
+            display: block;
+        }
+
+
+        .countdown-wrap {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 20px;
+        }
+
+        .countdown-ring {
+            position: relative;
+            width: 48px;
+            height: 48px;
+        }
+
+        .countdown-ring svg {
+            transform: rotate(-90deg);
+        }
+
+        .countdown-ring circle {
+            fill: none;
+            stroke-width: 3;
+        }
+
+        .ring-bg {
+            stroke: rgba(26, 26, 46, 0.08);
+        }
+
+        .ring-fill {
+            stroke: var(--gold);
+            stroke-linecap: round;
+            transition: stroke-dashoffset 1s linear;
+        }
+
+        .countdown-num {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+            font-weight: 400;
+            color: var(--ink);
+        }
+
+        .countdown-label {
+            font-size: 0.8rem;
+            font-weight: 300;
+            letter-spacing: 0.08em;
+            color: var(--muted);
+        }
+
+
+        #success-flash {
+            position: absolute;
+            inset: 0;
+            background: var(--cream);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            z-index: 10;
+            animation: flashIn 0.4s ease;
+        }
+
+        @keyframes flashIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        .success-check {
+            width: 80px;
+            height: 80px;
+            border: 2px solid var(--gold);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+            animation: popIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes popIn {
+            from {
+                transform: scale(0.5);
+            }
+
+            to {
+                transform: scale(1);
+            }
+        }
+
+        .success-check svg {
+            width: 36px;
+            height: 36px;
+            stroke: var(--gold);
+            fill: none;
+            stroke-width: 2;
+        }
+
+        #success-name {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 2.4rem;
+            font-weight: 300;
+            color: var(--ink);
+            margin-bottom: 8px;
+        }
+
+        #success-badge {
+            font-size: 0.8rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--gold);
+        }
+
+        /* Clock */
+        .clock {
+            position: fixed;
+            top: 28px;
+            right: 36px;
+            font-family: 'Jost', sans-serif;
+            font-size: 0.8rem;
+            font-weight: 200;
+            letter-spacing: 0.15em;
+            color: rgba(255, 255, 255, 0.25);
+        }
+
+        #qr-screen .clock {
+            color: var(--muted);
+        }
+    </style>
+</head>
+
+<body>
+
+
+    <div class="clock" id="clock">00:00</div>
+
+
+    <div id="idle-screen">
+        <div class="idle-ring">
+            <div class="beam"></div>
+            <svg class="scan-icon" viewBox="0 0 64 64">
+
+                <rect x="8" y="8" width="20" height="20" rx="2" />
+                <rect x="36" y="8" width="20" height="20" rx="2" />
+                <rect x="8" y="36" width="20" height="20" rx="2" />
+                <rect x="12" y="12" width="12" height="12" rx="1" fill="rgba(184,134,11,0.4)" stroke="none" />
+                <rect x="40" y="12" width="12" height="12" rx="1" fill="rgba(184,134,11,0.4)" stroke="none" />
+                <rect x="12" y="40" width="12" height="12" rx="1" fill="rgba(184,134,11,0.4)" stroke="none" />
+                <line x1="36" y1="40" x2="56" y2="40" />
+                <line x1="36" y1="48" x2="56" y2="48" />
+                <line x1="36" y1="56" x2="56" y2="56" />
+                <line x1="44" y1="36" x2="44" y2="56" />
+                <line x1="52" y1="36" x2="52" y2="56" />
+            </svg>
+        </div>
+
+        <h1 class="idle-title">Please Show<br>Your Badge</h1>
+        <p class="idle-sub">Hold QR code towards the camera</p>
+
+        <div>
+            <span class="status-dot"></span>
+            <span class="status-text">Scanner active</span>
+        </div>
+    </div>
+
+    <!-- ── QR SCREEN (shown after valid scan) ──────────────────────────────── -->
+    <div id="qr-screen">
+
+        <!-- Success flash (shown when visitor submits form) -->
+        <div id="success-flash">
+            <div class="success-check">
+                <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12" />
+                </svg>
+            </div>
+            <div id="success-name">Welcome!</div>
+            <div id="success-badge"></div>
+        </div>
+
+        <div class="qr-header">
+            <div class="qr-eyebrow">Visitor Check-In</div>
+            <h2 class="qr-title">Scan to <em>Register</em></h2>
+            <p class="qr-desc">Point your phone camera at the QR code below</p>
+        </div>
+
+        <div class="qr-card">
+            <canvas id="qr-canvas"></canvas>
+        </div>
+
+        <div class="countdown-wrap">
+            <div class="countdown-ring">
+                <svg width="48" height="48" viewBox="0 0 48 48">
+                    <circle class="ring-bg" cx="24" cy="24" r="20" />
+                    <circle class="ring-fill" cx="24" cy="24" r="20" id="ring-fill" stroke-dasharray="125.66"
+                        stroke-dashoffset="0" />
+                </svg>
+                <div class="countdown-num" id="countdown-num">—</div>
+            </div>
+            <span class="countdown-label">seconds remaining</span>
+        </div>
+
+    </div>
+
+    <script>
+
+        const REGISTER_URL = window.location.origin + '/register';
+
+
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('clock').textContent =
+                now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+        }
+        updateClock();
+        setInterval(updateClock, 30000);
+
+
+        let countdownInterval = null;
+        let timeoutHandle = null;
+        const CIRCUMFERENCE = 2 * Math.PI * 20; // r=20
+
+
+        const evtSource = new EventSource('/api/events');
+
+        evtSource.addEventListener('unlock', e => {
+            const { url, timeout } = JSON.parse(e.data);
+            showQR(url || REGISTER_URL, timeout || 30);
+        });
+
+        evtSource.addEventListener('registered', e => {
+            const { name, badge } = JSON.parse(e.data);
+            showSuccess(name, badge);
+        });
+
+        evtSource.onerror = () => {
+            console.warn('SSE connection lost, retrying...');
+        };
+
+
+        function showQR(url, seconds) {
+            clearCountdown();
+
+
+            QRCode.toCanvas(document.getElementById('qr-canvas'), url, {
+                width: 260,
+                margin: 2,
+                color: { dark: '#1a1a2e', light: '#ffffff' },
+            }, err => { if (err) console.error('QR error:', err); });
+
+
+            document.getElementById('idle-screen').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('idle-screen').style.display = 'none';
+                const qrScreen = document.getElementById('qr-screen');
+                qrScreen.style.display = 'flex';
+                requestAnimationFrame(() => qrScreen.classList.add('visible'));
+            }, 500);
+
+            startCountdown(seconds);
+        }
+
+
+        function startCountdown(total) {
+            let remaining = total;
+            const numEl = document.getElementById('countdown-num');
+            const ringEl = document.getElementById('ring-fill');
+
+            function tick() {
+                numEl.textContent = remaining;
+                const offset = CIRCUMFERENCE * (1 - remaining / total);
+                ringEl.style.strokeDashoffset = offset;
+                if (remaining <= 0) { clearCountdown(); returnToIdle(); }
+                remaining--;
+            }
+
+            tick();
+            countdownInterval = setInterval(tick, 1000);
+            timeoutHandle = setTimeout(returnToIdle, (total + 1) * 1000);
+        }
+
+        function clearCountdown() {
+            if (countdownInterval) { clearInterval(countdownInterval); countdownInterval = null; }
+            if (timeoutHandle) { clearTimeout(timeoutHandle); timeoutHandle = null; }
+        }
+
+
+        function returnToIdle() {
+            clearCountdown();
+            const qrScreen = document.getElementById('qr-screen');
+            qrScreen.classList.remove('visible');
+            setTimeout(() => {
+                qrScreen.style.display = 'none';
+                const idle = document.getElementById('idle-screen');
+                idle.style.display = 'flex';
+                requestAnimationFrame(() => { idle.style.opacity = '1'; });
+            }, 500);
+        }
+
+
+        function showSuccess(name, badge) {
+            clearCountdown();
+            document.getElementById('success-name').textContent = `Welcome, ${name}!`;
+            document.getElementById('success-badge').textContent = badge ? `Badge ${badge}` : '';
+
+            const flash = document.getElementById('success-flash');
+            flash.style.display = 'flex';
+
+            setTimeout(() => {
+                flash.style.display = 'none';
+                returnToIdle();
+            }, 5000);
+        }
+    </script>
+</body>
+
+</html>

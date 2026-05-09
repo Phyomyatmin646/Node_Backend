@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Visitor Registration</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital@0;1&family=Nunito:wght@300;400;500;600&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0e1118;
+            --card: #161b27;
+            --border: #232839;
+            --gold: #c8a96e;
+            --gold2: #8c6d3f;
+            --text: #e9e5dc;
+            --muted: #5a6070;
+            --error: #e05555;
+            --success: #52c07a;
+            --r: 12px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Nunito', sans-serif;
+            min-height: 100dvh;
+            padding-bottom: env(safe-area-inset-bottom, 20px);
+        }
+
+        /* ── Top bar ── */
+        .topbar {
+            background: var(--card);
+            border-bottom: 1px solid var(--border);
+            padding: 18px 20px 16px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .topbar-icon {
+            width: 34px;
+            height: 34px;
+            border: 1px solid var(--gold2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .topbar-icon svg {
+            width: 16px;
+            height: 16px;
+            stroke: var(--gold);
+            fill: none;
+            stroke-width: 1.5;
+        }
+
+        .topbar-text h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.05rem;
+            font-weight: 400;
+            color: var(--text);
+            letter-spacing: 0.01em;
+        }
+
+        .topbar-text p {
+            font-size: 0.72rem;
+            color: var(--muted);
+            font-weight: 300;
+            letter-spacing: 0.04em;
+        }
+
+        /* ── Progress ── */
+        .progress-bar {
+            height: 2px;
+            background: var(--border);
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--gold2), var(--gold));
+            width: 0%;
+            transition: width 0.35s ease;
+        }
+
+        /* ── Form body ── */
+        .form-body {
+            padding: 24px 16px 32px;
+            max-width: 480px;
+            margin: 0 auto;
+        }
+
+        /* ── Section headers ── */
+        .section-head {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 18px;
+            margin-top: 28px;
+        }
+
+        .section-head:first-child {
+            margin-top: 0;
+        }
+
+        .section-num {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            border: 1px solid var(--gold2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: var(--gold);
+            flex-shrink: 0;
+        }
+
+        .section-title {
+            font-size: 0.72rem;
+            font-weight: 600;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: var(--gold2);
+        }
+
+        /* ── Fields ── */
+        .field {
+            margin-bottom: 14px;
+        }
+
+        .field label {
+            display: block;
+            font-size: 0.78rem;
+            font-weight: 500;
+            color: var(--muted);
+            margin-bottom: 6px;
+            letter-spacing: 0.03em;
+        }
+
+        .field label .req {
+            color: var(--gold);
+        }
+
+        .field input,
+        .field select,
+        .field textarea {
+            width: 100%;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--r);
+            color: var(--text);
+            font-family: 'Nunito', sans-serif;
+            font-size: 1rem;
+            padding: 13px 15px;
+            outline: none;
+            appearance: none;
+            -webkit-appearance: none;
+            transition: border-color 0.18s, box-shadow 0.18s;
+        }
+
+        .field input::placeholder,
+        .field textarea::placeholder {
+            color: #323746;
+        }
+
+        .field input:focus,
+        .field select:focus,
+        .field textarea:focus {
+            border-color: var(--gold2);
+            box-shadow: 0 0 0 3px rgba(200, 169, 110, 0.08);
+        }
+
+        .field input.err,
+        .field select.err,
+        .field textarea.err {
+            border-color: var(--error);
+        }
+
+        .field-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .select-wrap {
+            position: relative;
+        }
+
+        .select-wrap::after {
+            content: '';
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            border: 5px solid transparent;
+            border-top-color: var(--muted);
+            border-bottom: none;
+            pointer-events: none;
+        }
+
+        .field textarea {
+            resize: none;
+            min-height: 80px;
+        }
+
+        .err-msg {
+            font-size: 0.72rem;
+            color: var(--error);
+            margin-top: 4px;
+            display: none;
+        }
+
+        /* ── Checkbox ── */
+        .check-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 14px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--r);
+            cursor: pointer;
+            margin-bottom: 6px;
+        }
+
+        .check-row input[type=checkbox] {
+            width: 18px;
+            height: 18px;
+            min-width: 18px;
+            margin-top: 1px;
+            accent-color: var(--gold);
+            cursor: pointer;
+        }
+
+        .check-row span {
+            font-size: 0.82rem;
+            color: var(--muted);
+            line-height: 1.5;
+        }
+
+        .check-row span a {
+            color: var(--gold);
+            text-decoration: none;
+        }
+
+        /* ── Submit ── */
+        .submit-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, var(--gold) 0%, #9a6f32 100%);
+            color: #0e1118;
+            border: none;
+            border-radius: var(--r);
+            font-family: 'Nunito', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            cursor: pointer;
+            margin-top: 24px;
+            transition: opacity 0.18s, transform 0.18s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .submit-btn:active {
+            transform: scale(0.98);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.55;
+        }
+
+        .spinner {
+            display: none;
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(14, 17, 24, 0.3);
+            border-top-color: #0e1118;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .global-err {
+            display: none;
+            background: rgba(224, 85, 85, 0.1);
+            border: 1px solid rgba(224, 85, 85, 0.3);
+            border-radius: var(--r);
+            padding: 12px 14px;
+            font-size: 0.84rem;
+            color: var(--error);
+            text-align: center;
+            margin-top: 14px;
+        }
+
+        /* ── Success ── */
+        #success-screen {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: var(--bg);
+            z-index: 100;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 24px;
+            text-align: center;
+        }
+
+        .ok-ring {
+            width: 80px;
+            height: 80px;
+            border: 2px solid var(--gold);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 28px;
+            animation: pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes pop {
+            from {
+                transform: scale(0.4);
+                opacity: 0;
+            }
+
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .ok-ring svg {
+            width: 36px;
+            height: 36px;
+            stroke: var(--gold);
+            fill: none;
+            stroke-width: 2;
+        }
+
+        #success-screen h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2rem;
+            font-weight: 400;
+            color: var(--text);
+            margin-bottom: 10px;
+        }
+
+        #success-screen p {
+            font-size: 0.9rem;
+            color: var(--muted);
+            line-height: 1.6;
+            margin-bottom: 28px;
+        }
+
+        .badge-pill {
+            background: var(--card);
+            border: 1px solid var(--gold2);
+            border-radius: 50px;
+            padding: 14px 32px;
+            display: inline-block;
+        }
+
+        .badge-pill small {
+            display: block;
+            font-size: 0.65rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--gold2);
+            margin-bottom: 4px;
+        }
+
+        .badge-pill strong {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            color: var(--gold);
+        }
+
+        /* ── Stagger in ── */
+        .section-head,
+        .field,
+        .check-row,
+        .submit-btn {
+            opacity: 0;
+            animation: up 0.4s ease forwards;
+        }
+
+        @keyframes up {
+            to {
+                opacity: 1;
+                transform: none;
+            }
+
+            from {
+                transform: translateY(14px);
+            }
+        }
+
+        .section-head:nth-child(1) {
+            animation-delay: 0.05s;
+        }
+
+        .field:nth-child(1) {
+            animation-delay: 0.08s;
+        }
+
+        .field:nth-child(2) {
+            animation-delay: 0.11s;
+        }
+
+        .field:nth-child(3) {
+            animation-delay: 0.14s;
+        }
+
+        .field:nth-child(4) {
+            animation-delay: 0.17s;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Success Screen -->
+    <div id="success-screen">
+        <div class="ok-ring">
+            <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12" />
+            </svg>
+        </div>
+        <h2>You're Registered!</h2>
+        <p>Your visit has been recorded.<br>Please proceed to the front desk.</p>
+        <div class="badge-pill">
+            <small>Badge Number</small>
+            <strong id="badge-out">—</strong>
+        </div>
+    </div>
+
+    <!-- Top bar -->
+    <div class="topbar">
+        <div class="topbar-icon">
+            <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
+            </svg>
+        </div>
+        <div class="topbar-text">
+            <h1>Visitor Registration</h1>
+            <p>Please complete all required fields</p>
+        </div>
+    </div>
+    <div class="progress-bar">
+        <div class="progress-fill" id="progress"></div>
+    </div>
+
+    <!-- Form -->
+    <div class="form-body">
+        <form id="form" novalidate>
+
+            <!-- Section 1: Personal -->
+            <div class="section-head">
+                <div class="section-num">1</div>
+                <span class="section-title">Personal Info</span>
+            </div>
+
+            <div class="field-row">
+                <div class="field">
+                    <label for="firstName">First Name <span class="req">*</span></label>
+                    <input type="text" id="firstName" placeholder="Jane" autocomplete="given-name">
+                    <div class="err-msg" id="e-firstName">Required</div>
+                </div>
+                <div class="field">
+                    <label for="lastName">Last Name <span class="req">*</span></label>
+                    <input type="text" id="lastName" placeholder="Smith" autocomplete="family-name">
+                    <div class="err-msg" id="e-lastName">Required</div>
+                </div>
+            </div>
+
+            <div class="field">
+                <label for="email">Email <span class="req">*</span></label>
+                <input type="email" id="email" placeholder="jane@example.com" autocomplete="email" inputmode="email">
+                <div class="err-msg" id="e-email">Valid email required</div>
+            </div>
+
+            <div class="field">
+                <label for="phone">Phone <span class="req">*</span></label>
+                <input type="tel" id="phone" placeholder="+1 555 000 0000" autocomplete="tel" inputmode="tel">
+                <div class="err-msg" id="e-phone">Required</div>
+            </div>
+
+            <div class="field">
+                <label for="company">Company / Organisation</label>
+                <input type="text" id="company" placeholder="Acme Corp" autocomplete="organization">
+            </div>
+
+            <!-- Section 2: Visit -->
+            <div class="section-head">
+                <div class="section-num">2</div>
+                <span class="section-title">Visit Details</span>
+            </div>
+
+            <div class="field">
+                <label for="hostName">Who are you visiting? <span class="req">*</span></label>
+                <input type="text" id="hostName" placeholder="Host's full name">
+                <div class="err-msg" id="e-hostName">Required</div>
+            </div>
+
+            <div class="field">
+                <label for="purpose">Purpose of Visit <span class="req">*</span></label>
+                <div class="select-wrap">
+                    <select id="purpose">
+                        <option value="" disabled selected>Select…</option>
+                        <option value="Meeting">Meeting</option>
+                        <option value="Interview">Interview</option>
+                        <option value="Delivery">Delivery</option>
+                        <option value="Event">Event</option>
+                        <option value="Tour">Tour</option>
+                        <option value="Service">Service / Maintenance</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="err-msg" id="e-purpose">Please select</div>
+            </div>
+
+            <div class="field">
+                <label for="purposeDetail">Additional Notes</label>
+                <textarea id="purposeDetail" placeholder="Room number, event name, etc…"></textarea>
+            </div>
+
+            <!-- Section 3: Agreement -->
+            <div class="section-head">
+                <div class="section-num">3</div>
+                <span class="section-title">Agreement</span>
+            </div>
+
+            <label class="check-row" for="agreed">
+                <input type="checkbox" id="agreed">
+                <span>I agree to the facility rules and consent to my information being recorded for security purposes.
+                    <a href="#" onclick="return false">View policy</a></span>
+            </label>
+            <div class="err-msg" id="e-agreed">You must agree to continue</div>
+
+            <div class="global-err" id="global-err"></div>
+
+            <button type="submit" class="submit-btn" id="submit-btn">
+                <span id="btn-label">Complete Registration</span>
+                <div class="spinner" id="spinner"></div>
+            </button>
+
+        </form>
+    </div>
+
+    <script>
+        const API = '/api/register';
+
+        // Progress tracking
+        const tracked = ['firstName', 'lastName', 'email', 'phone', 'hostName', 'purpose', 'agreed'];
+        function updateProgress() {
+            let n = 0;
+            tracked.forEach(id => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                if (el.type === 'checkbox') { if (el.checked) n++; }
+                else if (el.value.trim()) n++;
+            });
+            document.getElementById('progress').style.width = Math.round(n / tracked.length * 100) + '%';
+        }
+        document.querySelectorAll('input,select,textarea').forEach(el => {
+            el.addEventListener('input', updateProgress);
+            el.addEventListener('change', updateProgress);
+        });
+
+        // Validation helpers
+        function setErr(id, msg) {
+            document.getElementById(id)?.classList.add('err');
+            const e = document.getElementById('e-' + id);
+            if (e) { if (msg) e.textContent = msg; e.style.display = 'block'; }
+        }
+        function clrErr(id) {
+            document.getElementById(id)?.classList.remove('err');
+            const e = document.getElementById('e-' + id);
+            if (e) e.style.display = 'none';
+        }
+
+        document.querySelectorAll('input,select,textarea').forEach(el => {
+            el.addEventListener('input', () => clrErr(el.id));
+            el.addEventListener('change', () => clrErr(el.id));
+        });
+
+        function validate() {
+            let ok = true;
+            ['firstName', 'lastName', 'phone', 'hostName'].forEach(id => {
+                clrErr(id);
+                if (!document.getElementById(id).value.trim()) { setErr(id, 'Required'); ok = false; }
+            });
+            clrErr('email');
+            const em = document.getElementById('email').value.trim();
+            if (!em || !/^\S+@\S+\.\S+$/.test(em)) { setErr('email', 'Valid email required'); ok = false; }
+            clrErr('purpose');
+            if (!document.getElementById('purpose').value) { setErr('purpose', 'Please select'); ok = false; }
+            clrErr('agreed');
+            if (!document.getElementById('agreed').checked) { setErr('agreed', 'You must agree'); ok = false; }
+            return ok;
+        }
+
+        document.getElementById('form').addEventListener('submit', async e => {
+            e.preventDefault();
+            document.getElementById('global-err').style.display = 'none';
+            if (!validate()) return;
+
+            const btn = document.getElementById('submit-btn');
+            btn.disabled = true;
+            document.getElementById('btn-label').style.display = 'none';
+            document.getElementById('spinner').style.display = 'block';
+
+            const body = {
+                firstName: document.getElementById('firstName').value.trim(),
+                lastName: document.getElementById('lastName').value.trim(),
+                email: document.getElementById('email').value.trim(),
+                phone: document.getElementById('phone').value.trim(),
+                company: document.getElementById('company').value.trim(),
+                hostName: document.getElementById('hostName').value.trim(),
+                purpose: document.getElementById('purpose').value,
+                purposeDetail: document.getElementById('purposeDetail').value.trim(),
+                agreedToTerms: true,
+            };
+
+            try {
+                const res = await fetch(API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    document.getElementById('badge-out').textContent = data.data.badgeNumber || '—';
+                    document.getElementById('success-screen').style.display = 'flex';
+                } else {
+                    throw new Error(data.message || 'Registration failed');
+                }
+            } catch (err) {
+                const el = document.getElementById('global-err');
+                el.textContent = err.message;
+                el.style.display = 'block';
+                btn.disabled = false;
+                document.getElementById('btn-label').style.display = 'block';
+                document.getElementById('spinner').style.display = 'none';
+            }
+        });
+    </script>
+</body>
+
+</html>
