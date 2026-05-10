@@ -18,11 +18,12 @@
             --text: #e9e5dc;
             --muted: #5a6070;
             --error: #e05555;
-            --success: #52c07a;
             --r: 12px;
         }
 
-        * {
+        *,
+        *::before,
+        *::after {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
@@ -36,16 +37,15 @@
         body {
             background: var(--bg);
             color: var(--text);
-            font-family: 'Nunito', sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             min-height: 100dvh;
             padding-bottom: env(safe-area-inset-bottom, 20px);
         }
 
-        /* ── Top bar ── */
         .topbar {
             background: var(--card);
             border-bottom: 1px solid var(--border);
-            padding: 18px 20px 16px;
+            padding: 16px 20px;
             position: sticky;
             top: 0;
             z-index: 10;
@@ -55,8 +55,8 @@
         }
 
         .topbar-icon {
-            width: 34px;
-            height: 34px;
+            width: 36px;
+            height: 36px;
             border: 1px solid var(--gold2);
             border-radius: 50%;
             display: flex;
@@ -66,17 +66,18 @@
         }
 
         .topbar-icon svg {
-            width: 16px;
-            height: 16px;
+            width: 17px;
+            height: 17px;
             stroke: var(--gold);
             fill: none;
             stroke-width: 1.5;
+            stroke-linecap: round;
+            stroke-linejoin: round;
         }
 
         .topbar-text h1 {
-            font-family: 'Playfair Display', serif;
             font-size: 1.05rem;
-            font-weight: 400;
+            font-weight: 600;
             color: var(--text);
             letter-spacing: 0.01em;
         }
@@ -84,13 +85,12 @@
         .topbar-text p {
             font-size: 0.72rem;
             color: var(--muted);
-            font-weight: 300;
-            letter-spacing: 0.04em;
+            font-weight: 400;
+            letter-spacing: 0.03em;
         }
 
-        /* ── Progress ── */
         .progress-bar {
-            height: 2px;
+            height: 3px;
             background: var(--border);
         }
 
@@ -101,19 +101,17 @@
             transition: width 0.35s ease;
         }
 
-        /* ── Form body ── */
         .form-body {
-            padding: 24px 16px 32px;
-            max-width: 480px;
+            padding: 24px 16px 40px;
+            max-width: 500px;
             margin: 0 auto;
         }
 
-        /* ── Section headers ── */
         .section-head {
             display: flex;
             align-items: center;
             gap: 10px;
-            margin-bottom: 18px;
+            margin-bottom: 16px;
             margin-top: 28px;
         }
 
@@ -129,32 +127,31 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 0.7rem;
+            font-size: 0.72rem;
             font-weight: 600;
             color: var(--gold);
             flex-shrink: 0;
         }
 
         .section-title {
-            font-size: 0.72rem;
-            font-weight: 600;
-            letter-spacing: 0.18em;
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 0.2em;
             text-transform: uppercase;
             color: var(--gold2);
         }
 
-        /* ── Fields ── */
         .field {
             margin-bottom: 14px;
         }
 
         .field label {
             display: block;
-            font-size: 0.78rem;
+            font-size: 0.8rem;
             font-weight: 500;
             color: var(--muted);
             margin-bottom: 6px;
-            letter-spacing: 0.03em;
+            letter-spacing: 0.02em;
         }
 
         .field label .req {
@@ -169,7 +166,7 @@
             border: 1px solid var(--border);
             border-radius: var(--r);
             color: var(--text);
-            font-family: 'Nunito', sans-serif;
+            font-family: inherit;
             font-size: 1rem;
             padding: 13px 15px;
             outline: none;
@@ -180,14 +177,14 @@
 
         .field input::placeholder,
         .field textarea::placeholder {
-            color: #323746;
+            color: #2e3448;
         }
 
         .field input:focus,
         .field select:focus,
         .field textarea:focus {
             border-color: var(--gold2);
-            box-shadow: 0 0 0 3px rgba(200, 169, 110, 0.08);
+            box-shadow: 0 0 0 3px rgba(200, 169, 110, 0.09);
         }
 
         .field input.err,
@@ -202,6 +199,12 @@
             gap: 12px;
         }
 
+        @media (max-width: 360px) {
+            .field-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
         .select-wrap {
             position: relative;
         }
@@ -213,8 +216,7 @@
             top: 50%;
             transform: translateY(-50%);
             border: 5px solid transparent;
-            border-top-color: var(--muted);
-            border-bottom: none;
+            border-top: 6px solid var(--muted);
             pointer-events: none;
         }
 
@@ -230,7 +232,6 @@
             display: none;
         }
 
-        /* ── Checkbox ── */
         .check-row {
             display: flex;
             align-items: flex-start;
@@ -241,21 +242,26 @@
             border-radius: var(--r);
             cursor: pointer;
             margin-bottom: 6px;
+            transition: border-color 0.18s;
+        }
+
+        .check-row:focus-within {
+            border-color: var(--gold2);
         }
 
         .check-row input[type=checkbox] {
             width: 18px;
             height: 18px;
             min-width: 18px;
-            margin-top: 1px;
+            margin-top: 2px;
             accent-color: var(--gold);
             cursor: pointer;
         }
 
         .check-row span {
-            font-size: 0.82rem;
+            font-size: 0.83rem;
             color: var(--muted);
-            line-height: 1.5;
+            line-height: 1.55;
         }
 
         .check-row span a {
@@ -263,7 +269,6 @@
             text-decoration: none;
         }
 
-        /* ── Submit ── */
         .submit-btn {
             width: 100%;
             padding: 16px;
@@ -271,32 +276,33 @@
             color: #0e1118;
             border: none;
             border-radius: var(--r);
-            font-family: 'Nunito', sans-serif;
+            font-family: inherit;
             font-size: 1rem;
             font-weight: 700;
             letter-spacing: 0.06em;
             cursor: pointer;
             margin-top: 24px;
-            transition: opacity 0.18s, transform 0.18s;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 10px;
+            transition: opacity 0.18s, transform 0.15s;
         }
 
-        .submit-btn:active {
+        .submit-btn:active:not(:disabled) {
             transform: scale(0.98);
         }
 
         .submit-btn:disabled {
             opacity: 0.55;
+            cursor: not-allowed;
         }
 
         .spinner {
             display: none;
             width: 18px;
             height: 18px;
-            border: 2px solid rgba(14, 17, 24, 0.3);
+            border: 2.5px solid rgba(14, 17, 24, 0.25);
             border-top-color: #0e1118;
             border-radius: 50%;
             animation: spin 0.7s linear infinite;
@@ -314,19 +320,19 @@
             border: 1px solid rgba(224, 85, 85, 0.3);
             border-radius: var(--r);
             padding: 12px 14px;
-            font-size: 0.84rem;
+            font-size: 0.85rem;
             color: var(--error);
             text-align: center;
             margin-top: 14px;
+            line-height: 1.4;
         }
 
-        /* ── Success ── */
         #success-screen {
             display: none;
             position: fixed;
             inset: 0;
             background: var(--bg);
-            z-index: 100;
+            z-index: 200;
             flex-direction: column;
             align-items: center;
             justify-content: center;
@@ -343,12 +349,12 @@
             align-items: center;
             justify-content: center;
             margin: 0 auto 28px;
-            animation: pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            animation: pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
         }
 
         @keyframes pop {
             from {
-                transform: scale(0.4);
+                transform: scale(0.3);
                 opacity: 0;
             }
 
@@ -364,94 +370,111 @@
             stroke: var(--gold);
             fill: none;
             stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
         }
 
         #success-screen h2 {
-            font-family: 'Playfair Display', serif;
             font-size: 2rem;
-            font-weight: 400;
+            font-weight: 700;
             color: var(--text);
             margin-bottom: 10px;
         }
 
         #success-screen p {
-            font-size: 0.9rem;
+            font-size: 0.92rem;
             color: var(--muted);
             line-height: 1.6;
-            margin-bottom: 28px;
+            margin-bottom: 32px;
         }
 
         .badge-pill {
             background: var(--card);
             border: 1px solid var(--gold2);
             border-radius: 50px;
-            padding: 14px 32px;
+            padding: 16px 36px;
             display: inline-block;
         }
 
         .badge-pill small {
             display: block;
             font-size: 0.65rem;
-            letter-spacing: 0.2em;
+            letter-spacing: 0.22em;
             text-transform: uppercase;
             color: var(--gold2);
             margin-bottom: 4px;
         }
 
         .badge-pill strong {
-            font-family: 'Playfair Display', serif;
-            font-size: 1.5rem;
+            font-size: 1.6rem;
             color: var(--gold);
+            letter-spacing: 0.08em;
         }
 
-        /* ── Stagger in ── */
-        .section-head,
-        .field,
-        .check-row,
-        .submit-btn {
+        .fade-in {
             opacity: 0;
-            animation: up 0.4s ease forwards;
+            animation: fadeUp 0.4s ease forwards;
         }
 
-        @keyframes up {
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+
             to {
                 opacity: 1;
                 transform: none;
             }
-
-            from {
-                transform: translateY(14px);
-            }
         }
 
-        .section-head:nth-child(1) {
+        .fade-in:nth-child(1) {
             animation-delay: 0.05s;
         }
 
-        .field:nth-child(1) {
-            animation-delay: 0.08s;
+        .fade-in:nth-child(2) {
+            animation-delay: 0.10s;
         }
 
-        .field:nth-child(2) {
-            animation-delay: 0.11s;
+        .fade-in:nth-child(3) {
+            animation-delay: 0.15s;
         }
 
-        .field:nth-child(3) {
-            animation-delay: 0.14s;
+        .fade-in:nth-child(4) {
+            animation-delay: 0.20s;
         }
 
-        .field:nth-child(4) {
-            animation-delay: 0.17s;
+        .fade-in:nth-child(5) {
+            animation-delay: 0.25s;
+        }
+
+        .fade-in:nth-child(6) {
+            animation-delay: 0.30s;
+        }
+
+        .fade-in:nth-child(7) {
+            animation-delay: 0.35s;
+        }
+
+        .fade-in:nth-child(8) {
+            animation-delay: 0.40s;
+        }
+
+        .fade-in:nth-child(9) {
+            animation-delay: 0.45s;
+        }
+
+        .fade-in:nth-child(10) {
+            animation-delay: 0.50s;
         }
     </style>
 </head>
 
 <body>
 
-    <!-- Success Screen -->
     <div id="success-screen">
         <div class="ok-ring">
-            <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+            <svg viewBox="0 0 24 24">
                 <polyline points="20 6 9 17 4 12" />
             </svg>
         </div>
@@ -463,10 +486,9 @@
         </div>
     </div>
 
-    <!-- Top bar -->
     <div class="topbar">
         <div class="topbar-icon">
-            <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+            <svg viewBox="0 0 24 24">
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
                 <circle cx="12" cy="7" r="4" />
             </svg>
@@ -480,17 +502,15 @@
         <div class="progress-fill" id="progress"></div>
     </div>
 
-    <!-- Form -->
     <div class="form-body">
-        <form id="form" novalidate>
+        <form id="form" novalidate autocomplete="on">
 
-            <!-- Section 1: Personal -->
-            <div class="section-head">
+            <div class="section-head fade-in">
                 <div class="section-num">1</div>
                 <span class="section-title">Personal Info</span>
             </div>
 
-            <div class="field-row">
+            <div class="field-row fade-in">
                 <div class="field">
                     <label for="firstName">First Name <span class="req">*</span></label>
                     <input type="text" id="firstName" placeholder="Jane" autocomplete="given-name">
@@ -503,40 +523,39 @@
                 </div>
             </div>
 
-            <div class="field">
-                <label for="email">Email <span class="req">*</span></label>
+            <div class="field fade-in">
+                <label for="email">Email Address <span class="req">*</span></label>
                 <input type="email" id="email" placeholder="jane@example.com" autocomplete="email" inputmode="email">
-                <div class="err-msg" id="e-email">Valid email required</div>
+                <div class="err-msg" id="e-email">Enter a valid email address</div>
             </div>
 
-            <div class="field">
-                <label for="phone">Phone <span class="req">*</span></label>
+            <div class="field fade-in">
+                <label for="phone">Phone Number <span class="req">*</span></label>
                 <input type="tel" id="phone" placeholder="+1 555 000 0000" autocomplete="tel" inputmode="tel">
                 <div class="err-msg" id="e-phone">Required</div>
             </div>
 
-            <div class="field">
+            <div class="field fade-in">
                 <label for="company">Company / Organisation</label>
                 <input type="text" id="company" placeholder="Acme Corp" autocomplete="organization">
             </div>
 
-            <!-- Section 2: Visit -->
-            <div class="section-head">
+            <div class="section-head fade-in">
                 <div class="section-num">2</div>
                 <span class="section-title">Visit Details</span>
             </div>
 
-            <div class="field">
+            <div class="field fade-in">
                 <label for="hostName">Who are you visiting? <span class="req">*</span></label>
                 <input type="text" id="hostName" placeholder="Host's full name">
                 <div class="err-msg" id="e-hostName">Required</div>
             </div>
 
-            <div class="field">
+            <div class="field fade-in">
                 <label for="purpose">Purpose of Visit <span class="req">*</span></label>
                 <div class="select-wrap">
                     <select id="purpose">
-                        <option value="" disabled selected>Select…</option>
+                        <option value="" disabled selected>Select purpose…</option>
                         <option value="Meeting">Meeting</option>
                         <option value="Interview">Interview</option>
                         <option value="Delivery">Delivery</option>
@@ -546,30 +565,32 @@
                         <option value="Other">Other</option>
                     </select>
                 </div>
-                <div class="err-msg" id="e-purpose">Please select</div>
+                <div class="err-msg" id="e-purpose">Please select a purpose</div>
             </div>
 
-            <div class="field">
+            <div class="field fade-in">
                 <label for="purposeDetail">Additional Notes</label>
-                <textarea id="purposeDetail" placeholder="Room number, event name, etc…"></textarea>
+                <textarea id="purposeDetail" placeholder="Room number, event name, or any other info…"></textarea>
             </div>
 
-            <!-- Section 3: Agreement -->
-            <div class="section-head">
+            <div class="section-head fade-in">
                 <div class="section-num">3</div>
                 <span class="section-title">Agreement</span>
             </div>
 
-            <label class="check-row" for="agreed">
+            <label class="check-row fade-in" for="agreed">
                 <input type="checkbox" id="agreed">
-                <span>I agree to the facility rules and consent to my information being recorded for security purposes.
-                    <a href="#" onclick="return false">View policy</a></span>
+                <span>
+                    I agree to abide by the facility's rules and consent to my information
+                    being recorded for security and administrative purposes.
+                    <a href="#" onclick="return false">View policy</a>
+                </span>
             </label>
             <div class="err-msg" id="e-agreed">You must agree to continue</div>
 
             <div class="global-err" id="global-err"></div>
 
-            <button type="submit" class="submit-btn" id="submit-btn">
+            <button type="submit" class="submit-btn fade-in" id="submit-btn">
                 <span id="btn-label">Complete Registration</span>
                 <div class="spinner" id="spinner"></div>
             </button>
@@ -578,69 +599,97 @@
     </div>
 
     <script>
-        const API = '/api/register';
+        const API = '/api/visitors/register';
+        const TRACKED = ['firstName', 'lastName', 'email', 'phone', 'hostName', 'purpose', 'agreed'];
 
-        // Progress tracking
-        const tracked = ['firstName', 'lastName', 'email', 'phone', 'hostName', 'purpose', 'agreed'];
         function updateProgress() {
-            let n = 0;
-            tracked.forEach(id => {
+            let filled = 0;
+            TRACKED.forEach(id => {
                 const el = document.getElementById(id);
                 if (!el) return;
-                if (el.type === 'checkbox') { if (el.checked) n++; }
-                else if (el.value.trim()) n++;
+                if (el.type === 'checkbox') {
+                    if (el.checked) filled++;
+                } else if (el.value.trim()) {
+                    filled++;
+                }
             });
-            document.getElementById('progress').style.width = Math.round(n / tracked.length * 100) + '%';
+            document.getElementById('progress').style.width =
+                Math.round((filled / TRACKED.length) * 100) + '%';
         }
-        document.querySelectorAll('input,select,textarea').forEach(el => {
+
+        document.querySelectorAll('input, select, textarea').forEach(el => {
             el.addEventListener('input', updateProgress);
             el.addEventListener('change', updateProgress);
         });
+        updateProgress();
 
-        // Validation helpers
         function setErr(id, msg) {
             document.getElementById(id)?.classList.add('err');
-            const e = document.getElementById('e-' + id);
-            if (e) { if (msg) e.textContent = msg; e.style.display = 'block'; }
-        }
-        function clrErr(id) {
-            document.getElementById(id)?.classList.remove('err');
-            const e = document.getElementById('e-' + id);
-            if (e) e.style.display = 'none';
+            const el = document.getElementById('e-' + id);
+            if (el) {
+                if (msg) el.textContent = msg;
+                el.style.display = 'block';
+            }
         }
 
-        document.querySelectorAll('input,select,textarea').forEach(el => {
+        function clrErr(id) {
+            document.getElementById(id)?.classList.remove('err');
+            const el = document.getElementById('e-' + id);
+            if (el) el.style.display = 'none';
+        }
+
+        document.querySelectorAll('input, select, textarea').forEach(el => {
             el.addEventListener('input', () => clrErr(el.id));
             el.addEventListener('change', () => clrErr(el.id));
         });
 
         function validate() {
-            let ok = true;
+            let valid = true;
+
             ['firstName', 'lastName', 'phone', 'hostName'].forEach(id => {
                 clrErr(id);
-                if (!document.getElementById(id).value.trim()) { setErr(id, 'Required'); ok = false; }
+                if (!document.getElementById(id).value.trim()) {
+                    setErr(id, 'This field is required');
+                    valid = false;
+                }
             });
+
             clrErr('email');
-            const em = document.getElementById('email').value.trim();
-            if (!em || !/^\S+@\S+\.\S+$/.test(em)) { setErr('email', 'Valid email required'); ok = false; }
+            const email = document.getElementById('email').value.trim();
+            if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
+                setErr('email', 'Enter a valid email address');
+                valid = false;
+            }
+
             clrErr('purpose');
-            if (!document.getElementById('purpose').value) { setErr('purpose', 'Please select'); ok = false; }
+            if (!document.getElementById('purpose').value) {
+                setErr('purpose', 'Please select a purpose');
+                valid = false;
+            }
+
             clrErr('agreed');
-            if (!document.getElementById('agreed').checked) { setErr('agreed', 'You must agree'); ok = false; }
-            return ok;
+            if (!document.getElementById('agreed').checked) {
+                setErr('agreed', 'You must agree to continue');
+                valid = false;
+            }
+
+            return valid;
         }
 
-        document.getElementById('form').addEventListener('submit', async e => {
+        document.getElementById('form').addEventListener('submit', async (e) => {
             e.preventDefault();
             document.getElementById('global-err').style.display = 'none';
+
             if (!validate()) return;
 
             const btn = document.getElementById('submit-btn');
+            const btnLabel = document.getElementById('btn-label');
+            const spinner = document.getElementById('spinner');
             btn.disabled = true;
-            document.getElementById('btn-label').style.display = 'none';
-            document.getElementById('spinner').style.display = 'block';
+            btnLabel.style.display = 'none';
+            spinner.style.display = 'block';
 
-            const body = {
+            const payload = {
                 firstName: document.getElementById('firstName').value.trim(),
                 lastName: document.getElementById('lastName').value.trim(),
                 email: document.getElementById('email').value.trim(),
@@ -649,25 +698,42 @@
                 hostName: document.getElementById('hostName').value.trim(),
                 purpose: document.getElementById('purpose').value,
                 purposeDetail: document.getElementById('purposeDetail').value.trim(),
-                agreedToTerms: true,
+                agreedToTerms: document.getElementById('agreed').checked,
             };
 
             try {
-                const res = await fetch(API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-                const data = await res.json();
-                if (res.ok && data.success) {
-                    document.getElementById('badge-out').textContent = data.data.badgeNumber || '—';
-                    document.getElementById('success-screen').style.display = 'flex';
-                } else {
-                    throw new Error(data.message || 'Registration failed');
+                const res = await fetch(API, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                });
+
+                const contentType = res.headers.get('content-type') || '';
+                if (!contentType.includes('application/json')) {
+                    throw new Error(`Server error (${res.status}). Please try again.`);
                 }
+
+                const data = await res.json();
+
+                if (res.ok && data.success) {
+                    document.getElementById('badge-out').textContent =
+                        data.data?.badgeNumber || '—';
+                    document.getElementById('success-screen').style.display = 'flex';
+                    document.getElementById('form').reset();
+                    updateProgress();
+                } else {
+                    throw new Error(data.message || 'Registration failed. Please try again.');
+                }
+
             } catch (err) {
-                const el = document.getElementById('global-err');
-                el.textContent = err.message;
-                el.style.display = 'block';
+                const errEl = document.getElementById('global-err');
+                errEl.textContent = err.message;
+                errEl.style.display = 'block';
+                errEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            } finally {
                 btn.disabled = false;
-                document.getElementById('btn-label').style.display = 'block';
-                document.getElementById('spinner').style.display = 'none';
+                btnLabel.style.display = 'block';
+                spinner.style.display = 'none';
             }
         });
     </script>
