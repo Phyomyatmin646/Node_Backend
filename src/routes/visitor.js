@@ -2,35 +2,180 @@ const express = require("express");
 const router = express.Router();
 const Visitor = require("../models/Visitor");
 
-router.post("/checkin", async (req, res) => {
+function cleanText(value) {
+  return typeof value === "string" ? value.trim() : "";
+}
+
+function broadcastSSE(req, event, data) {
+  const sseClients = req.app.get("sseClients") || new Map();
+  const msg = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
+
+  for (const client of sseClients.values()) {
+    try {
+      if (client.req.destroyed || client.res.writableEnded) {
+        client.cleanup?.();
+        continue;
+      }
+
+      client.res.write(msg);
+      if (client.res.flush) client.res.flush();
+    } catch (err) {
+      console.error("SSE Broadcast Error:", err.message);
+      client.cleanup?.();
+    }
+  }
+}
+
+router.post("/register", async (req, res) => {
   try {
-    const visitor = await Visitor.create(req.body);
+    const {
+      firstName,
+      lastName,
+      email,
+      phone,
+      company,
+      hostName,
+      purpose,
+      purposeDetail,
+      agreedToTerms,
+    } = req.body;
 
+    const normalized = {
+      firstName: cleanText(firstName),
+      lastName: cleanText(lastName),
+      email: cleanText(email).toLowerCase(),
+      phone: cleanText(phone),
+      company: cleanText(company),
+      hostName: cleanText(hostName),
+      purpose: cleanText(purpose) || "Other",
+      purposeDetail: cleanText(purposeDetail),
+      agreedToTerms: Boolean(agreedToTerms),
+    };
+
+    if (
+      !normalized.firstName ||
+      !normalized.lastName ||
+      !normalized.email ||
+      !normalized.phone ||
+      !normalized.hostName ||
+      !normalized.purpose
+    ) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "First name, last name, email, phone, host name, and purpose are required.",
+      });
+    }
+
+    if (!/^\S+@\S+\.\S+$/.test(normalized.email)) {
+      return res.status(400).json({
+        success: false,
+        message: "A valid email address is required.",
+      });
+    }
+
+    if (!normalized.agreedToTerms) {
+      return res.status(400).json({
+        success: false,
+        message: "You must agree to the terms before registering.",
+      });
+    }
+
+    const visitor = new Visitor({
+      firstName: normalized.firstName,
+      lastName: normalized.lastName,
+      email: normalized.email,
+      phone: normalized.phone,
+      company: normalized.company,
+      hostName: normalized.hostName,
+      purpose: normalized.purpose,
+      purposeDetail: normalized.purposeDetail,
+      agreedToTerms: normalized.agreedToTerms,
+      reason_for_visit: normalized.purposeDetail,
+    });
+
+    await visitor.save();
+
+    console.log(
+      `📋 Visitor Registered: ${visitor.fullname} [${visitor.badgeNumber}]`,
+    );
+
+    // 1. Notify Laptop Display (SSE)
+    broadcastSSE(req, "registered", {
+      name: visitor.fullname,
+      badge: visitor.badgeNumber,
+    });
+
+    // 2. Notify Admin Dashboard (Socket.IO)
     const io = req.app.get("io");
+    if (io) {
+      const payload = {
+        name: visitor.fullname,
+        badge: visitor.badgeNumber,
+        time: new Date().toISOString(),
+      };
+      io.emit("visitor:registered", payload);
+      io.emit("visitor_checkin", visitor);
+    }
 
-    io.emit("visitor_checkin", visitor);
-
-    res.json({ message: "Visitor checked in", visitor });
+    // Success Response (Do NOT call next() here)
+    return res.status(201).json({
+      success: true,
+      message: "Registration successful!",
+      data: {
+        badgeNumber: visitor.badgeNumber,
+        name: visitor.fullname,
+        id: visitor._id,
+      },
+    });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error("Registration Server Error:", err);
+
+    if (err.name === "ValidationError") {
+      const msgs = Object.values(err.errors).map((e) => e.message);
+      return res.status(400).json({ success: false, message: msgs.join(". ") });
+    }
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error: " + err.message,
+    });
   }
 });
 
-router.put("/checkout/:id", async (req, res) => {
+router.get("/", async (req, res) => {
   try {
-    const visitor = await Visitor.findByIdAndUpdate(
-      req.params.id,
-      { check_out_time: new Date() },
-      { new: true },
-    );
+    const { date, page = 1, limit = 50 } = req.query;
+    const filter = {};
 
-    const io = req.app.get("io");
+    if (date) {
+      const start = new Date(date);
+      start.setHours(0, 0, 0, 0);
+      const end = new Date(date);
+      end.setHours(23, 59, 59, 999);
+      filter.createdAt = { $gte: start, $lte: end };
+    }
 
-    io.emit("visitor_checkout", visitor);
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const [visitors, total] = await Promise.all([
+      Visitor.find(filter)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(parseInt(limit)),
+      Visitor.countDocuments(filter),
+    ]);
 
-    res.json({ message: "Visitor checked out", visitor });
+    res.json({
+      success: true,
+      data: visitors,
+      pagination: {
+        total,
+        page: Number(page),
+        pages: Math.ceil(total / limit),
+      },
+    });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ success: false, message: err.message });
   }
 });
 
