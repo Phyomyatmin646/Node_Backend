@@ -210,6 +210,8 @@ app.get("/api/qr-image", async (req, res) => {
 app.use("/api/auth", require("./src/routes/auth"));
 app.use("/api/protected", require("./src/routes/protected"));
 app.use("/api/admin", require("./src/routes/admin"));
+app.use("/api/rooms", require("./src/routes/roomRoutes"));
+app.use("/api/advertisements", require("./src/routes/advertisementRoutes"));
 app.use("/api/notifications", require("./src/routes/notification"));
 app.use("/api/sos", require("./src/routes/sos"));
 app.use("/api/parking", require("./src/routes/parking"));
@@ -278,4 +280,6 @@ server.listen(PORT, "0.0.0.0", () => {
   console.log(`   Display    : http://localhost:${PORT}/display`);
   console.log(`   Register   : ${REGISTRATION_FORM_URL}`);
   console.log(`   ESP32 scan : POST http://<LAN_IP>:${PORT}/api/qr-scan`);
+  console.log(`   Rooms API  : http://localhost:${PORT}/api/rooms`);
+  console.log(`   Ads API    : http://localhost:${PORT}/api/advertisements`);
 });
