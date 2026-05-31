@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 const HelperSchema = new mongoose.Schema({
   fullname: { type: String, required: true },
   age: { type: Number },
+  photo: { type: String, required: true },
   phone: { type: String, required: true },
   address: { type: String, required: true },
   gender: { type: String, enum: ["Male", "Female"] },  
