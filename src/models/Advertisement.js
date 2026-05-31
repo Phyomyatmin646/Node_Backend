@@ -8,7 +8,7 @@ const AdvertisementSchema = new mongoose.Schema({
   link_url: { type: String },
   status: { type: String, enum: ["Active", "Inactive"], default: "Active" },
   created_at: { type: Date, default: Date.now },
-  duration: { type: Number, required: true }, // Duration in days
+  duration: { type: Number, required: true },
 });
 
 module.exports = mongoose.model("Advertisement", AdvertisementSchema);

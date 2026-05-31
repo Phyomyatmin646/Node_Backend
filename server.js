@@ -214,6 +214,8 @@ app.use("/api/rooms", require("./src/routes/roomRoutes"));
 app.use("/api/advertisements", require("./src/routes/advertisementRoutes"));
 app.use("/api/notifications", require("./src/routes/notification"));
 app.use("/api/sos", require("./src/routes/sos"));
+app.use("/api/res-parking", require("./src/routes/resParking"));
+app.use("/api/vis-parking", require("./src/routes/visParking"));
 app.use("/api/parking", require("./src/routes/parking"));
 app.use("/api/announcements", require("./src/routes/announcement"));
 app.use("/api/reports", require("./src/routes/report"));
