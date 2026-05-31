@@ -27,7 +27,11 @@ router.get("/", async (req, res) => {
     return res.json({
       success: true,
       data: items,
-      pagination: { total, page: Number(page), pages: Math.ceil(total / Number(limit)) },
+      pagination: {
+        total,
+        page: Number(page),
+        pages: Math.ceil(total / Number(limit)),
+      },
     });
   } catch (err) {
     console.error("GET /reports error:", err);
