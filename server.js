@@ -217,7 +217,8 @@ app.use("/api/sos", require("./src/routes/sos"));
 app.use("/api/parking", require("./src/routes/parking"));
 app.use("/api/announcements", require("./src/routes/announcement"));
 app.use("/api/reports", require("./src/routes/report"));
-app.use("/api/helpers", require("./src/routes/helperRequest"));
+app.use("/api/helper-requests", require("./src/routes/helperRequest"));
+app.use("/api/helpers", require("./src/routes/helper"));
 app.use("/api/bills", require("./src/routes/serviceBill"));
 
 app.use("/api/visitors", require("./src/routes/visitor"));
