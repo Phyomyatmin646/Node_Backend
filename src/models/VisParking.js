@@ -2,17 +2,9 @@ const mongoose = require("mongoose");
 
 const VisParkingSchema = new mongoose.Schema(
   {
-    slot_number: {
-      type: String,
-      required: true,
-      unique: true,
-      trim: true,
-    },
-    status: {
-      type: String,
-      enum: ["Available", "Occupied", "Maintenance"],
-      default: "Available",
-    },
+    totalSlot : number,
+    availableSlot : number,
+    maintenanceSlot : number,
   },
   { timestamps: true },
 );
