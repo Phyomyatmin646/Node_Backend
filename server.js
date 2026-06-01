@@ -8,6 +8,7 @@ const http = require("http");
 const os = require("os");
 const QRCode = require("qrcode");
 const { Server } = require("socket.io");
+const setupMQTT = require("./src/mqtt/mqtt");
 
 const app = express();
 const PORT = Number(process.env.PORT || 5001);
@@ -47,6 +48,7 @@ let nextSseClientId = 1;
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
 app.use(
   cors({
     origin: true,
@@ -80,9 +82,7 @@ app.get("/api/events", (req, res) => {
   let cleanedUp = false;
 
   const cleanup = () => {
-    if (cleanedUp) {
-      return;
-    }
+    if (cleanedUp) return;
 
     cleanedUp = true;
     clearInterval(keepAlive);
@@ -145,13 +145,18 @@ app.post("/api/qr-scan", (req, res) => {
   const { token } = req.body;
 
   if (!token) {
-    return res
-      .status(400)
-      .json({ success: false, message: "No token provided" });
+    return res.status(400).json({
+      success: false,
+      message: "No token provided",
+    });
   }
+
   if (token !== VALID_QR_TOKEN) {
     console.log("❌ Invalid badge token received");
-    return res.status(401).json({ success: false, message: "Invalid token" });
+    return res.status(401).json({
+      success: false,
+      message: "Invalid token",
+    });
   }
 
   console.log(
@@ -166,10 +171,15 @@ app.post("/api/qr-scan", (req, res) => {
 
   const io = app.get("io");
   if (io) {
-    io.emit("visitor:badge-scanned", { timestamp: new Date().toISOString() });
+    io.emit("visitor:badge-scanned", {
+      timestamp: new Date().toISOString(),
+    });
   }
 
-  return res.json({ success: true, message: "Display unlocked" });
+  return res.json({
+    success: true,
+    message: "Display unlocked",
+  });
 });
 
 app.get("/api/qr-image", async (req, res) => {
@@ -179,9 +189,10 @@ app.get("/api/qr-image", async (req, res) => {
     const size = Math.max(160, Math.min(requestedSize || 260, 1200));
 
     if (!text) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Missing text query parameter" });
+      return res.status(400).json({
+        success: false,
+        message: "Missing text query parameter",
+      });
     }
 
     const png = await QRCode.toBuffer(text, {
@@ -214,15 +225,13 @@ app.use("/api/rooms", require("./src/routes/roomRoutes"));
 app.use("/api/advertisements", require("./src/routes/advertisementRoutes"));
 app.use("/api/notifications", require("./src/routes/notification"));
 app.use("/api/sos", require("./src/routes/sos"));
-app.use("/api/res-parking", require("./src/routes/resParking"));
-app.use("/api/vis-parking", require("./src/routes/visParking"));
+
 app.use("/api/parking", require("./src/routes/parking"));
 app.use("/api/announcements", require("./src/routes/announcement"));
 app.use("/api/reports", require("./src/routes/report"));
 app.use("/api/helper-requests", require("./src/routes/helperRequest"));
 app.use("/api/helpers", require("./src/routes/helper"));
 app.use("/api/bills", require("./src/routes/serviceBill"));
-
 app.use("/api/visitors", require("./src/routes/visitor"));
 
 app.get("/display", (req, res) =>
@@ -234,6 +243,7 @@ app.get("/register", (req, res) =>
 );
 
 app.get("/", (req, res) => res.send("🚀 API Running..."));
+
 app.get("/health", (req, res) =>
   res.json({
     status: "ok",
@@ -269,13 +279,17 @@ io.on("connection", (socket) => {
     const uid = Object.keys(onlineUsers).find(
       (k) => onlineUsers[k] === socket.id,
     );
+
     if (uid) delete onlineUsers[uid];
+
     console.log("❌ Socket disconnected:", socket.id);
   });
 });
 
 app.set("io", io);
 app.set("onlineUsers", onlineUsers);
+
+setupMQTT(io);
 
 server.listen(PORT, "0.0.0.0", () => {
   console.log(`\n🚀 Server running on port ${PORT}`);
