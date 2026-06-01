@@ -8,7 +8,7 @@ const http = require("http");
 const os = require("os");
 const QRCode = require("qrcode");
 const { Server } = require("socket.io");
-const setupMQTT = require("./src/mqtt/mqtt");
+const setupMQTT = require("./src/services/mqtt");
 
 const app = express();
 const PORT = Number(process.env.PORT || 5001);
