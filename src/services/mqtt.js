@@ -1,5 +1,6 @@
 const mqtt = require("mqtt");
 const Parking = require("../models/Parking");
+const SosAlert = require("../models/SosAlert");
 
 function isValidType(type) {
   return ["visitor", "resident"].includes(type);
@@ -61,7 +62,26 @@ function setupMQTT(io) {
       console.log("MQTT:", topic, data);
 
       if (topic === "sos/alert") {
-        io.emit("sos_alert", data);
+        const sosData = {
+          message: data.message || "SOS alert received",
+          source: data.source || "ESP32",
+          status: data.status === "SOS_ACTIVE" ? "Pending" : data.status || "Pending",
+          alert_type: data.alert_type || "General",
+          priority: data.priority || "High",
+          device_id: data.device_id,
+          created_at: new Date(),
+        };
+
+        if (data.room_id) sosData.room_id = data.room_id;
+        if (data.resident_id) sosData.resident_id = data.resident_id;
+
+        const createdAlert = await SosAlert.create(sosData);
+        const populatedAlert = await SosAlert.findById(createdAlert._id)
+          .populate("resident_id", "fullname email phone role")
+          .populate("room_id")
+          .lean();
+
+        io.emit("sos_alert", populatedAlert);
       }
 
       if (topic === "parking/update") {

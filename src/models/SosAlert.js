@@ -4,13 +4,17 @@ const SosAlertSchema = new mongoose.Schema({
   resident_id: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
-    required: true,
   },
 
   room_id: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Room",
-    required: true,
+  },
+
+  source: {
+    type: String,
+    trim: true,
+    default: "ESP32",
   },
 
   message: {
@@ -33,13 +37,18 @@ const SosAlertSchema = new mongoose.Schema({
 
   status: {
     type: String,
-    enum: ["Pending", "In Progress", "Resolved", "Rejected"],
+    enum: ["Pending", "In Progress", "Resolved", "Rejected", "SOS_ACTIVE"],
     default: "Pending",
   },
 
   created_at: {
     type: Date,
     default: Date.now,
+  },
+
+  device_id: {
+    type: String,
+    trim: true,
   },
 
   resolved_at: {
