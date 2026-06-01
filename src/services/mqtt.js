@@ -36,22 +36,22 @@ async function updateParkingByDelta(type, delta) {
 }
 
 function setupMQTT(io) {
-  const client = mqtt.connect(
-    process.env.MQTT_URL || "mqtt://broker.hivemq.com",
-  );
+  const client = mqtt.connect(process.env.MQTT_URL, {
+    username: process.env.MQTT_USER,
+    password: process.env.MQTT_PASS,
+    reconnectPeriod: 3000,
+    keepalive: 60,
+    clean: true,
+  });
 
   client.on("connect", () => {
     console.log("✅ MQTT Connected");
 
-    client.subscribe("sos/alert", (err) => {
-      if (err) console.error("❌ SOS subscribe error:", err.message);
-      else console.log("📡 Subscribed: sos/alert");
-    });
+    client.subscribe("sos/alert");
+    client.subscribe("parking/update");
 
-    client.subscribe("parking/update", (err) => {
-      if (err) console.error("❌ Parking subscribe error:", err.message);
-      else console.log("📡 Subscribed: parking/update");
-    });
+    console.log("📡 Subscribed: sos/alert");
+    console.log("📡 Subscribed: parking/update");
   });
 
   client.on("message", async (topic, message) => {
@@ -62,17 +62,15 @@ function setupMQTT(io) {
 
       if (topic === "sos/alert") {
         io.emit("sos_alert", data);
-
-        if (data.room_id) {
-          io.to(String(data.room_id)).emit("sos_alert", data);
-        }
       }
 
       if (topic === "parking/update") {
-        const type = data.type;
-        const delta = Number(data.delta);
+        const updatedParking = await updateParkingByDelta(
+          data.type,
+          Number(data.delta)
+        );
 
-        const updatedParking = await updateParkingByDelta(type, delta);
+        console.log("✅ Parking Updated:", updatedParking);
 
         io.emit("parking_update", updatedParking);
       }
