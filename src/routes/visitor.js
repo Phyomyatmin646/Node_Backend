@@ -33,6 +33,7 @@ router.post("/register", async (req, res) => {
       lastName,
       email,
       phone,
+      nric_number,
       company,
       hostName,
       purpose,
@@ -45,6 +46,7 @@ router.post("/register", async (req, res) => {
       lastName: cleanText(lastName),
       email: cleanText(email).toLowerCase(),
       phone: cleanText(phone),
+      nric_number: cleanText(nric_number),
       company: cleanText(company),
       hostName: cleanText(hostName),
       purpose: cleanText(purpose) || "Other",
@@ -86,39 +88,32 @@ router.post("/register", async (req, res) => {
       lastName: normalized.lastName,
       email: normalized.email,
       phone: normalized.phone,
+      nric_number: normalized.nric_number,
       company: normalized.company,
       hostName: normalized.hostName,
       purpose: normalized.purpose,
       purposeDetail: normalized.purposeDetail,
-      agreedToTerms: normalized.agreedToTerms,
       reason_for_visit: normalized.purposeDetail,
+      agreedToTerms: normalized.agreedToTerms,
     });
 
     await visitor.save();
 
-    console.log(
-      `📋 Visitor Registered: ${visitor.fullname} [${visitor.badgeNumber}]`,
-    );
-
-    // 1. Notify Laptop Display (SSE)
     broadcastSSE(req, "registered", {
       name: visitor.fullname,
       badge: visitor.badgeNumber,
     });
 
-    // 2. Notify Admin Dashboard (Socket.IO)
     const io = req.app.get("io");
     if (io) {
-      const payload = {
+      io.emit("visitor:registered", {
         name: visitor.fullname,
         badge: visitor.badgeNumber,
         time: new Date().toISOString(),
-      };
-      io.emit("visitor:registered", payload);
+      });
       io.emit("visitor_checkin", visitor);
     }
 
-    // Success Response (Do NOT call next() here)
     return res.status(201).json({
       success: true,
       message: "Registration successful!",
@@ -133,7 +128,10 @@ router.post("/register", async (req, res) => {
 
     if (err.name === "ValidationError") {
       const msgs = Object.values(err.errors).map((e) => e.message);
-      return res.status(400).json({ success: false, message: msgs.join(". ") });
+      return res.status(400).json({
+        success: false,
+        message: msgs.join(". "),
+      });
     }
 
     return res.status(500).json({
@@ -151,12 +149,15 @@ router.get("/", async (req, res) => {
     if (date) {
       const start = new Date(date);
       start.setHours(0, 0, 0, 0);
+
       const end = new Date(date);
       end.setHours(23, 59, 59, 999);
+
       filter.createdAt = { $gte: start, $lte: end };
     }
 
     const skip = (parseInt(page) - 1) * parseInt(limit);
+
     const [visitors, total] = await Promise.all([
       Visitor.find(filter)
         .sort({ createdAt: -1 })
@@ -175,7 +176,10 @@ router.get("/", async (req, res) => {
       },
     });
   } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
   }
 });
 

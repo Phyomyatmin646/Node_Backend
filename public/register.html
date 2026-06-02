@@ -544,6 +544,10 @@
                 <div class="section-num">2</div>
                 <span class="section-title">Visit Details</span>
             </div>
+            <div class="field fade-in">
+                <label for="nric_number">NRIC Number</label>
+                <input type="text" id="nric_number" placeholder="Optional NRC / ID number" autocomplete="off" />
+            </div>
 
             <div class="field fade-in">
                 <label for="hostName">Who are you visiting? <span class="req">*</span></label>
@@ -690,15 +694,16 @@
             spinner.style.display = 'block';
 
             const payload = {
-                firstName: document.getElementById('firstName').value.trim(),
-                lastName: document.getElementById('lastName').value.trim(),
-                email: document.getElementById('email').value.trim(),
-                phone: document.getElementById('phone').value.trim(),
-                company: document.getElementById('company').value.trim(),
-                hostName: document.getElementById('hostName').value.trim(),
-                purpose: document.getElementById('purpose').value,
-                purposeDetail: document.getElementById('purposeDetail').value.trim(),
-                agreedToTerms: document.getElementById('agreed').checked,
+                firstName: document.getElementById("firstName").value.trim(),
+                lastName: document.getElementById("lastName").value.trim(),
+                email: document.getElementById("email").value.trim(),
+                phone: document.getElementById("phone").value.trim(),
+                nric_number: document.getElementById("nric_number").value.trim(),
+                company: document.getElementById("company").value.trim(),
+                hostName: document.getElementById("hostName").value.trim(),
+                purpose: document.getElementById("purpose").value,
+                purposeDetail: document.getElementById("purposeDetail").value.trim(),
+                agreedToTerms: document.getElementById("agreed").checked,
             };
 
             try {
